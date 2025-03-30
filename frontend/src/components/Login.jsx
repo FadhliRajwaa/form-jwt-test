@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "./api"; // Impor instance api
+import axios from "axios";
 import { motion } from "framer-motion";
 
 const Login = () => {
@@ -15,10 +15,11 @@ const Login = () => {
     setIsLoading(true);
     setError("");
     try {
-      const response = await api.post("/login", {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/login`,
+        { username, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
       localStorage.setItem("token", response.data.token);
       navigate("/users");
     } catch (err) {
@@ -36,7 +37,6 @@ const Login = () => {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
-      {/* Background Glow */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-96 h-96 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
       </div>

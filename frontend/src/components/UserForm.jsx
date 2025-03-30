@@ -1,52 +1,47 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { motion } from "framer-motion";
 
 const UserForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    email: '',
+    username: "",
+    password: "",
+    email: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (id) {
       const fetchUser = async () => {
         try {
-          const token = localStorage.getItem('token');
+          const token = localStorage.getItem("token");
           if (!token) {
-            setError('Silakan login terlebih dahulu');
-            navigate('/');
+            setError("Silakan login terlebih dahulu");
+            navigate("/");
             return;
           }
-          console.log('Mengambil data user dengan ID:', id);
-          const response = await axios.get(`http://localhost:3000/users/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          console.log('Response user:', response.data);
+          const response = await axios.get(
+            `${import.meta.env.VITE_BACKEND_URL}/users/${id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           setFormData({
             username: response.data.username,
             email: response.data.email,
-            password: '',
+            password: "",
           });
         } catch (err) {
-          console.error('Error saat mengambil user:', err);
           if (err.response) {
-            console.log('Response error dari backend:', err.response.data);
-            setError(err.response.data.message || 'Gagal mengambil data user');
+            setError(err.response.data.message || "Gagal mengambil data user");
             if (err.response.status === 401 || err.response.status === 403) {
-              navigate('/');
+              navigate("/");
             }
           } else if (err.request) {
-            console.log('Tidak ada response dari backend:', err.request);
-            setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
+            setError("Tidak dapat terhubung ke server.");
           } else {
-            console.log('Error lainnya:', err.message);
-            setError('Terjadi kesalahan: ' + err.message);
+            setError("Terjadi kesalahan: " + err.message);
           }
         }
       };
@@ -61,51 +56,42 @@ const UserForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        setError('Silakan login terlebih dahulu');
-        navigate('/');
+        setError("Silakan login terlebih dahulu");
+        navigate("/");
         return;
       }
       if (id) {
-        console.log('Mengupdate user dengan ID:', id, formData);
         await axios.put(
-          `http://localhost:3000/users/${id}`,
+          `${import.meta.env.VITE_BACKEND_URL}/users/${id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('User berhasil diupdate');
       } else {
-        console.log('Menambah user baru:', formData);
-        const response = await axios.post(
-          'http://localhost:3000/users',
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/users`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('Response tambah user:', response.data);
       }
-      navigate('/users');
+      navigate("/users");
     } catch (err) {
-      console.error('Error saat submit form:', err);
       if (err.response) {
-        console.log('Response error dari backend:', err.response.data);
-        setError(err.response.data.message || 'Gagal menyimpan data');
+        setError(err.response.data.message || "Gagal menyimpan data");
         if (err.response.status === 401 || err.response.status === 403) {
-          navigate('/');
+          navigate("/");
         }
       } else if (err.request) {
-        console.log('Tidak ada response dari backend:', err.request);
-        setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
+        setError("Tidak dapat terhubung ke server.");
       } else {
-        console.log('Error lainnya:', err.message);
-        setError('Terjadi kesalahan: ' + err.message);
+        setError("Terjadi kesalahan: " + err.message);
       }
     }
   };
 
   return (
     <div className="relative flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
-      {/* Background Glow */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-96 h-96 bg-pink-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
       </div>
@@ -113,7 +99,7 @@ const UserForm = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 50 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative bg-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20"
       >
         <motion.h2
@@ -122,7 +108,7 @@ const UserForm = () => {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="text-4xl font-extrabold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500"
         >
-          {id ? 'Edit Pengguna' : 'Tambah Pengguna'}
+          {id ? "Edit Pengguna" : "Tambah Pengguna"}
         </motion.h2>
         {error && (
           <motion.p
@@ -140,7 +126,9 @@ const UserForm = () => {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="mb-4"
           >
-            <label className="block text-sm mb-2 font-medium">Username</label>
+            <label className="block text-sm mb-2 font-medium text-white">
+              Username
+            </label>
             <input
               type="text"
               name="username"
@@ -156,14 +144,16 @@ const UserForm = () => {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="mb-4"
           >
-            <label className="block text-sm mb-2 font-medium">Password</label>
+            <label className="block text-sm mb-2 font-medium text-white">
+              Password
+            </label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               className="w-full p-3 rounded-lg bg-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-              placeholder={id ? 'Leave blank to keep unchanged' : 'Enter password'}
+              placeholder={id ? "Leave blank to keep unchanged" : "Enter password"}
             />
           </motion.div>
           <motion.div
@@ -172,7 +162,9 @@ const UserForm = () => {
             transition={{ delay: 0.5, duration: 0.5 }}
             className="mb-6"
           >
-            <label className="block text-sm mb-2 font-medium">Email</label>
+            <label className="block text-sm mb-2 font-medium text-white">
+              Email
+            </label>
             <input
               type="email"
               name="email"
@@ -183,13 +175,13 @@ const UserForm = () => {
             />
           </motion.div>
           <motion.button
-            whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)' }}
+            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(59, 130, 246, 0.5)" }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.3 }}
             type="submit"
-            className="w-full p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-semibold"
+            className="w-full p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-semibold text-white"
           >
-            {id ? 'Update' : 'Tambah'}
+            {id ? "Update" : "Tambah"}
           </motion.button>
         </form>
       </motion.div>
