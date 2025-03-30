@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
+// Di semua file komponen, tambahkan ini di bagian atas
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const Register = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -17,11 +20,15 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/register', formData, {
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await axios.post(
+        `${API_BASE_URL}/register`, // Diubah
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
         }
-      });
+      );
       
       if(response.status === 201) {
         navigate('/');

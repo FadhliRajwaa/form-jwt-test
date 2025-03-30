@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 
+// Di semua file komponen, tambahkan ini di bagian atas
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +19,7 @@ const Login = () => {
     setError("");
     try {
       const response = await axios.post(
-        "http://localhost:3000/login",
+        `${API_BASE_URL}/login`, // Diubah
         {
           username,
           password,
