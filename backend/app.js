@@ -8,17 +8,14 @@ const cors = require('cors');
 
 const app = express();
 
-// Ambil PORT dan SECRET_KEY dari .env, dengan fallback jika tidak ada
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY;
 
-// Validasi SECRET_KEY
 if (!SECRET_KEY) {
   console.error('Error: SECRET_KEY tidak ditemukan di .env');
   process.exit(1);
 }
 
-// Koneksi ke MongoDB menggunakan MONGO_URI dari .env
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -29,10 +26,9 @@ mongoose.connect(process.env.MONGO_URI, {
     process.exit(1);
   });
 
-// Middleware
 app.use(bodyParser.json());
 app.use(cors({
-  origin: 'http://localhost:5174', // Sesuaikan dengan port frontend Anda
+  origin: process.env.ALLOWED_ORIGIN, // Gunakan variabel lingkungan
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
