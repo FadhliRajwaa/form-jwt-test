@@ -1,0 +1,33 @@
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1%, transparent 1%);
+  background-size: 20px 20px;
+  opacity: 0.3;
+  z-index: -1;
+  animation: particleAnimation 20s linear infinite;
+}
+
+@keyframes particleAnimation {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.underline {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
