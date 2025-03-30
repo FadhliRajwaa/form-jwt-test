@@ -8,25 +8,28 @@ const cors = require('cors');
 
 const app = express();
 
-// Ambil SECRET_KEY dari environment variables
-const SECRET_KEY = process.env.SECRET_KEY;
+// Validasi Environment Variables
+const requiredEnvVars = ['SECRET_KEY', 'MONGO_URI'];
+requiredEnvVars.forEach(env => {
+  if (!process.env[env]) {
+    console.error(`Error: ${env} tidak ditemukan di environment variables`);
+    process.exit(1);
+  }
+});
 
-// Validasi SECRET_KEY
-if (!SECRET_KEY) {
-  console.error('Error: SECRET_KEY tidak ditemukan di environment variables');
-  process.exit(1);
-}
-
-// Koneksi ke MongoDB menggunakan MONGO_URI dari environment variables
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+// Koneksi MongoDB dengan timeout
+const connectWithRetry = () => {
+  mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log('Terhubung ke MongoDB'))
   .catch(err => {
-    console.error('Gagal terhubung ke MongoDB:', err);
-    process.exit(1);
+    console.error('Gagal terhubung ke MongoDB, mencoba lagi dalam 5 detik...', err);
+    setTimeout(connectWithRetry, 5000);
   });
+};
+connectWithRetry();
 
 // Middleware
 app.use(bodyParser.json());
@@ -35,7 +38,8 @@ app.use(cors({
     'https://form-jwt-test-ps51.vercel.app',
     'http://localhost:5173'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -50,20 +54,18 @@ const User = mongoose.model('User', userSchema);
 
 // Middleware untuk verifikasi token
 const verifyToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
+  const token = req.headers.authorization?.split(' ')[1];
+  
   if (!token) {
-    console.log('Token tidak ditemukan');
     return res.status(401).json({ message: 'Token Diperlukan!' });
   }
 
-  jwt.verify(token, SECRET_KEY, (err, user) => {
+  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
     if (err) {
-      console.log('Token tidak valid:', err.message);
+      console.error('Token Error:', err.message);
       return res.status(403).json({ message: 'Token Tidak Valid!' });
     }
-    req.user = user;
+    req.user = decoded;
     next();
   });
 };

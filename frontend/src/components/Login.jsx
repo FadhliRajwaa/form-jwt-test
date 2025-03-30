@@ -17,19 +17,18 @@ const Login = () => {
     setIsLoading(true);
     setError("");
     try {
+      // Di dalam handleLogin:
       const response = await axios.post(
         `${API_BASE_URL}/login`,
+        { username, password },
         {
-          username,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
         }
       );
-      localStorage.setItem("token", response.data.token);
+
+      // Simpan user data ke localStorage
+      localStorage.setItem("user", JSON.stringify(response.data.user));
       navigate("/users");
     } catch (err) {
       if (err.response) {
