@@ -8,7 +8,6 @@ const cors = require('cors');
 
 const app = express();
 
-// Ambil PORT dan SECRET_KEY dari .env
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -17,7 +16,6 @@ if (!SECRET_KEY) {
   process.exit(1);
 }
 
-// Koneksi ke MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -28,15 +26,13 @@ mongoose.connect(process.env.MONGO_URI, {
     process.exit(1);
   });
 
-// Middleware
 app.use(bodyParser.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://form-jwt-test-ps51.vercel.app/', // Ganti dengan URL frontend di Vercel nanti
+  origin: process.env.FRONTEND_URL || 'https://form-jwt-test-ps51.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Schema dan Model untuk User
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -44,7 +40,6 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// Middleware verifikasi token
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -56,7 +51,20 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// Endpoint /login
+// Tambahkan rute root
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Selamat datang di JWT Test API!',
+    status: 'API is running',
+    endpoints: {
+      login: '/login (POST)',
+      register: '/register (POST)',
+      users: '/users (GET, POST, PUT, DELETE)'
+    }
+  });
+});
+
+// Endpoint lainnya tetap sama
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -72,7 +80,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Endpoint /register
 app.post('/register', async (req, res) => {
   const { username, password, email } = req.body;
   if (!username || !password || !email) {
@@ -91,7 +98,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Endpoint CRUD /users
 app.get('/users', verifyToken, async (req, res) => {
   try {
     const users = await User.find({}, 'username email');
@@ -153,5 +159,4 @@ app.delete('/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Export untuk Vercel
 module.exports = app;
