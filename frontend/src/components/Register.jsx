@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-// Di semua file komponen, tambahkan ini di bagian atas
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 const Register = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -21,7 +18,7 @@ const Register = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/register`, // Diubah
+        "https://form-jwt-test-ps51.vercel.app/api/register",
         formData,
         {
           headers: {

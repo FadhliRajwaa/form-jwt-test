@@ -8,16 +8,16 @@ const cors = require('cors');
 
 const app = express();
 
-// Ambil SECRET_KEY dari .env
+// Ambil SECRET_KEY dari environment variables (diatur di Vercel)
 const SECRET_KEY = process.env.SECRET_KEY;
 
 // Validasi SECRET_KEY
 if (!SECRET_KEY) {
-  console.error('Error: SECRET_KEY tidak ditemukan di .env');
+  console.error('Error: SECRET_KEY tidak ditemukan di environment variables');
   process.exit(1);
 }
 
-// Koneksi ke MongoDB menggunakan MONGO_URI dari .env
+// Koneksi ke MongoDB menggunakan MONGO_URI dari environment variables
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,

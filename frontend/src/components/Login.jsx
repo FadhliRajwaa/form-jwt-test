@@ -3,9 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 
-// Di semua file komponen, tambahkan ini di bagian atas
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,26 +16,27 @@ const Login = () => {
     setError("");
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/login`,
-        { username, password },
+        "https://form-jwt-test-ps51.vercel.app/api/login",
         {
-          headers: { "Content-Type": "application/json" },
-          timeout: 10000 // Tambahkan timeout
+          username,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
-      
-      if(response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        navigate("/users");
-      }
+      localStorage.setItem("token", response.data.token);
+      navigate("/users");
     } catch (err) {
-      let errorMessage = "Terjadi kesalahan";
-      if(err.code === "ECONNABORTED") {
-        errorMessage = "Timeout: Server tidak merespon";
-      } else if(err.response) {
-        errorMessage = err.response.data.message || "Login gagal";
+      if (err.response) {
+        setError(err.response.data.message || "Login gagal");
+      } else if (err.request) {
+        setError("Tidak dapat terhubung ke server.");
+      } else {
+        setError("Terjadi kesalahan: " + err.message);
       }
-      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +44,6 @@ const Login = () => {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
-      {/* Background Glow */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-96 h-96 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
       </div>

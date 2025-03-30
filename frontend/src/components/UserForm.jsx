@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 const UserForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,7 +24,7 @@ const UserForm = () => {
             return;
           }
           
-          const response = await axios.get(`${API_BASE_URL}/users/${id}`, {
+          const response = await axios.get(`https://form-jwt-test-ps51.vercel.app/api/users/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           
@@ -66,13 +64,13 @@ const UserForm = () => {
 
       if (id) {
         await axios.put(
-          `${API_BASE_URL}/users/${id}`,
+          `https://form-jwt-test-ps51.vercel.app/api/users/${id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         await axios.post(
-          `${API_BASE_URL}/users`,
+          "https://form-jwt-test-ps51.vercel.app/api/users",
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
