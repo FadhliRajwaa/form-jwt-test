@@ -31,8 +31,12 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Middleware
 app.use(bodyParser.json());
+// Di bagian CORS configuration, update origin
 app.use(cors({
-  origin: 'http://localhost:5174', // Sesuaikan dengan port frontend Vite
+  origin: [
+    'https://form-jwt-test-ps51.vercel.app', // Domain frontend
+    'http://localhost:5173' // Untuk development lokal
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
