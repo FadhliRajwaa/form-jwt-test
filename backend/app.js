@@ -8,8 +8,7 @@ const cors = require('cors');
 
 const app = express();
 
-// Ambil PORT dan SECRET_KEY dari .env, dengan fallback jika tidak ada
-const PORT = process.env.PORT || 3000;
+// Ambil SECRET_KEY dari .env
 const SECRET_KEY = process.env.SECRET_KEY;
 
 // Validasi SECRET_KEY
@@ -31,15 +30,13 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Middleware
 app.use(bodyParser.json());
-// Di bagian CORS configuration, update origin
 app.use(cors({
   origin: [
     'https://form-jwt-test-ps51.vercel.app', // Domain frontend
     'http://localhost:5173' // Untuk development lokal
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // Tambahkan ini
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Schema dan Model untuk User
@@ -71,8 +68,11 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// Endpoint POST /login
-app.post('/login', async (req, res) => {
+// API Router
+const apiRouter = express.Router();
+
+// Endpoint POST /api/login
+apiRouter.post('/login', async (req, res) => {
   console.log('Request login diterima:', req.body);
   const { username, password } = req.body;
   try {
@@ -99,13 +99,35 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Tambahkan health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK' });
+// Endpoint POST /api/register
+apiRouter.post('/register', async (req, res) => {
+  console.log('Request registrasi baru:', req.body);
+  const { username, password, email } = req.body;
+  
+  if (!username || !password || !email) {
+    return res.status(400).json({ message: 'Semua field diperlukan!' });
+  }
+
+  try {
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username/email sudah digunakan!' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, password: hashedPassword, email });
+    await newUser.save();
+    
+    console.log('Registrasi berhasil:', newUser);
+    res.status(201).json({ message: 'Registrasi berhasil!' });
+  } catch (err) {
+    console.error('Error registrasi:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-// Endpoint GET /users
-app.get('/users', verifyToken, async (req, res) => {
+// Endpoint GET /api/users
+apiRouter.get('/users', verifyToken, async (req, res) => {
   try {
     const users = await User.find({}, 'username email');
     console.log('Mengambil daftar user:', users);
@@ -116,8 +138,8 @@ app.get('/users', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint GET /users/:id
-app.get('/users/:id', verifyToken, async (req, res) => {
+// Endpoint GET /api/users/:id
+apiRouter.get('/users/:id', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id, 'username email');
     if (!user) {
@@ -132,8 +154,8 @@ app.get('/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint POST /users
-app.post('/users', verifyToken, async (req, res) => {
+// Endpoint POST /api/users
+apiRouter.post('/users', verifyToken, async (req, res) => {
   console.log('Request membuat user baru:', req.body);
   const { username, password, email } = req.body;
   if (!username || !password || !email) {
@@ -163,35 +185,8 @@ app.post('/users', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint POST /register
-app.post('/register', async (req, res) => {
-  console.log('Request registrasi baru:', req.body);
-  const { username, password, email } = req.body;
-  
-  if (!username || !password || !email) {
-    return res.status(400).json({ message: 'Semua field diperlukan!' });
-  }
-
-  try {
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username/email sudah digunakan!' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, password: hashedPassword, email });
-    await newUser.save();
-    
-    console.log('Registrasi berhasil:', newUser);
-    res.status(201).json({ message: 'Registrasi berhasil!' });
-  } catch (err) {
-    console.error('Error registrasi:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Endpoint PUT /users/:id
-app.put('/users/:id', verifyToken, async (req, res) => {
+// Endpoint PUT /api/users/:id
+apiRouter.put('/users/:id', verifyToken, async (req, res) => {
   console.log('Request update user:', req.params.id, req.body);
   const { username, password, email } = req.body;
   try {
@@ -214,8 +209,8 @@ app.put('/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint DELETE /users/:id
-app.delete('/users/:id', verifyToken, async (req, res) => {
+// Endpoint DELETE /api/users/:id
+apiRouter.delete('/users/:id', verifyToken, async (req, res) => {
   console.log('Request hapus user:', req.params.id);
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -231,6 +226,8 @@ app.delete('/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server Berjalan di http://localhost:${PORT}`);
-});
+// Pasang rute API di bawah /api
+app.use('/api', apiRouter);
+
+// Eksport aplikasi untuk Vercel
+module.exports = app;
