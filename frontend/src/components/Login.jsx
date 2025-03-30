@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { api } from "./api"; // Impor instance api
 import { motion } from "framer-motion";
 
 const Login = () => {
@@ -15,25 +15,17 @@ const Login = () => {
     setIsLoading(true);
     setError("");
     try {
-      const response = await axios.post(
-        "http://localhost:3000/login",
-        {
-          username,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await api.post("/login", {
+        username,
+        password,
+      });
       localStorage.setItem("token", response.data.token);
       navigate("/users");
     } catch (err) {
       if (err.response) {
         setError(err.response.data.message || "Login gagal");
       } else if (err.request) {
-        setError("Tidak dapat terhubung ke server. Pastikan backend berjalan.");
+        setError("Tidak dapat terhubung ke server.");
       } else {
         setError("Terjadi kesalahan: " + err.message);
       }

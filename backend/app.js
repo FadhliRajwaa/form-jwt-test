@@ -8,7 +8,9 @@ const cors = require('cors');
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+// Di app.js
+const PORT = process.env.PORT || 3000; // Gunakan PORT dari Vercel
+
 const SECRET_KEY = process.env.SECRET_KEY;
 
 if (!SECRET_KEY) {
@@ -28,7 +30,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 app.use(bodyParser.json());
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN, // Gunakan variabel lingkungan
+  origin: process.env.ALLOWED_ORIGIN || 'https://form-jwt-test-ps51.vercel.app', // Vercel frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
