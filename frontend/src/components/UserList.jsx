@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-const API_BASE_URL = "https://form-jwt-test-ps51.vercel.app/api";
-
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
@@ -15,20 +13,30 @@ const UserList = () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
+          setError('Silakan login terlebih dahulu');
           navigate('/');
           return;
         }
-
-        const response = await axios.get(`${API_BASE_URL}/users`, {
+        console.log('Mengambil daftar user dengan token:', token);
+        const response = await axios.get('http://localhost:3000/users', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Response daftar user:', response.data);
         setUsers(response.data);
       } catch (err) {
+        console.error('Error saat mengambil user:', err);
         if (err.response) {
+          console.log('Response error dari backend:', err.response.data);
           setError(err.response.data.message || 'Gagal mengambil data');
-          if (err.response.status === 401) navigate('/');
+          if (err.response.status === 401 || err.response.status === 403) {
+            navigate('/');
+          }
+        } else if (err.request) {
+          console.log('Tidak ada response dari backend:', err.request);
+          setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
         } else {
-          setError('Tidak dapat terhubung ke server');
+          console.log('Error lainnya:', err.message);
+          setError('Terjadi kesalahan: ' + err.message);
         }
       }
     };
@@ -39,12 +47,24 @@ const UserList = () => {
     if (window.confirm('Apakah Anda yakin ingin menghapus user ini?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`${API_BASE_URL}/users/${id}`, {
+        console.log('Menghapus user dengan ID:', id);
+        await axios.delete(`http://localhost:3000/users/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('User berhasil dihapus');
         setUsers(users.filter((user) => user._id !== id));
       } catch (err) {
-        setError(err.response?.data.message || 'Gagal menghapus user');
+        console.error('Error saat menghapus user:', err);
+        if (err.response) {
+          console.log('Response error dari backend:', err.response.data);
+          setError(err.response.data.message || 'Gagal menghapus user');
+        } else if (err.request) {
+          console.log('Tidak ada response dari backend:', err.request);
+          setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
+        } else {
+          console.log('Error lainnya:', err.message);
+          setError('Terjadi kesalahan: ' + err.message);
+        }
       }
     }
   };
@@ -56,9 +76,12 @@ const UserList = () => {
 
   return (
     <div className="relative p-6 sm:p-8 lg:p-12">
+      {/* Background Glow */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-96 h-96 bg-purple-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
       </div>
+
+      
 
       <motion.div
         initial={{ opacity: 0, y: 50 }}

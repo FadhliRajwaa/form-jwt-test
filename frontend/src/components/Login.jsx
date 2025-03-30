@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 
-const API_BASE_URL = "https://form-jwt-test-ps51.vercel.app/api";
-
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -17,24 +15,25 @@ const Login = () => {
     setIsLoading(true);
     setError("");
     try {
-      // Di dalam handleLogin:
       const response = await axios.post(
-        `${API_BASE_URL}/login`,
-        { username, password },
+        "http://localhost:3000/login",
         {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
+          username,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
-
-      // Simpan user data ke localStorage
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("token", response.data.token);
       navigate("/users");
     } catch (err) {
       if (err.response) {
         setError(err.response.data.message || "Login gagal");
       } else if (err.request) {
-        setError("Tidak dapat terhubung ke server.");
+        setError("Tidak dapat terhubung ke server. Pastikan backend berjalan.");
       } else {
         setError("Terjadi kesalahan: " + err.message);
       }
@@ -45,6 +44,7 @@ const Login = () => {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
+      {/* Background Glow */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-96 h-96 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
       </div>

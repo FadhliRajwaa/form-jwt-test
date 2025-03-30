@@ -8,38 +8,32 @@ const cors = require('cors');
 
 const app = express();
 
-// Validasi Environment Variables
-const requiredEnvVars = ['SECRET_KEY', 'MONGO_URI'];
-requiredEnvVars.forEach(env => {
-  if (!process.env[env]) {
-    console.error(`Error: ${env} tidak ditemukan di environment variables`);
-    process.exit(1);
-  }
-});
+// Ambil PORT dan SECRET_KEY dari .env, dengan fallback jika tidak ada
+const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.SECRET_KEY;
 
-// Koneksi MongoDB dengan timeout
-const connectWithRetry = () => {
-  mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+// Validasi SECRET_KEY
+if (!SECRET_KEY) {
+  console.error('Error: SECRET_KEY tidak ditemukan di .env');
+  process.exit(1);
+}
+
+// Koneksi ke MongoDB menggunakan MONGO_URI dari .env
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
   .then(() => console.log('Terhubung ke MongoDB'))
   .catch(err => {
-    console.error('Gagal terhubung ke MongoDB, mencoba lagi dalam 5 detik...', err);
-    setTimeout(connectWithRetry, 5000);
+    console.error('Gagal terhubung ke MongoDB:', err);
+    process.exit(1);
   });
-};
-connectWithRetry();
 
 // Middleware
 app.use(bodyParser.json());
 app.use(cors({
-  origin: [
-    'https://form-jwt-test-ps51.vercel.app',
-    'http://localhost:5173'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: 'http://localhost:5174', // Sesuaikan dengan port frontend Anda
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -54,33 +48,26 @@ const User = mongoose.model('User', userSchema);
 
 // Middleware untuk verifikasi token
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
   if (!token) {
+    console.log('Token tidak ditemukan');
     return res.status(401).json({ message: 'Token Diperlukan!' });
   }
 
-  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, SECRET_KEY, (err, user) => {
     if (err) {
-      console.error('Token Error:', err.message);
+      console.log('Token tidak valid:', err.message);
       return res.status(403).json({ message: 'Token Tidak Valid!' });
     }
-    req.user = decoded;
+    req.user = user;
     next();
   });
 };
 
-// API Router
-const apiRouter = express.Router();
-
-// Tambahkan logging untuk semua rute API
-apiRouter.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-
-// Endpoint POST /api/login
-apiRouter.post('/login', async (req, res) => {
+// Endpoint POST /login
+app.post('/login', async (req, res) => {
   console.log('Request login diterima:', req.body);
   const { username, password } = req.body;
   try {
@@ -107,8 +94,8 @@ apiRouter.post('/login', async (req, res) => {
   }
 });
 
-// Endpoint POST /api/register
-apiRouter.post('/register', async (req, res) => {
+// Tambahkan ini sebelum endpoint login
+app.post('/register', async (req, res) => {
   console.log('Request registrasi baru:', req.body);
   const { username, password, email } = req.body;
   
@@ -134,8 +121,8 @@ apiRouter.post('/register', async (req, res) => {
   }
 });
 
-// Endpoint GET /api/users
-apiRouter.get('/users', verifyToken, async (req, res) => {
+// Endpoint GET /users
+app.get('/users', verifyToken, async (req, res) => {
   try {
     const users = await User.find({}, 'username email');
     console.log('Mengambil daftar user:', users);
@@ -146,8 +133,8 @@ apiRouter.get('/users', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint GET /api/users/:id
-apiRouter.get('/users/:id', verifyToken, async (req, res) => {
+// Endpoint GET /users/:id
+app.get('/users/:id', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id, 'username email');
     if (!user) {
@@ -162,8 +149,8 @@ apiRouter.get('/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint POST /api/users
-apiRouter.post('/users', verifyToken, async (req, res) => {
+// Endpoint POST /users
+app.post('/users', verifyToken, async (req, res) => {
   console.log('Request membuat user baru:', req.body);
   const { username, password, email } = req.body;
   if (!username || !password || !email) {
@@ -193,8 +180,8 @@ apiRouter.post('/users', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint PUT /api/users/:id
-apiRouter.put('/users/:id', verifyToken, async (req, res) => {
+// Endpoint PUT /users/:id
+app.put('/users/:id', verifyToken, async (req, res) => {
   console.log('Request update user:', req.params.id, req.body);
   const { username, password, email } = req.body;
   try {
@@ -217,8 +204,8 @@ apiRouter.put('/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint DELETE /api/users/:id
-apiRouter.delete('/users/:id', verifyToken, async (req, res) => {
+// Endpoint DELETE /users/:id
+app.delete('/users/:id', verifyToken, async (req, res) => {
   console.log('Request hapus user:', req.params.id);
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -234,13 +221,6 @@ apiRouter.delete('/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Pasang rute API di bawah /api
-app.use('/api', apiRouter);
-
-// Tambahkan rute dasar untuk debugging
-app.get('/', (req, res) => {
-  res.send('Backend is running');
+app.listen(PORT, () => {
+  console.log(`Server Berjalan di http://localhost:${PORT}`);
 });
-
-// Eksport aplikasi untuk Vercel
-module.exports = app;

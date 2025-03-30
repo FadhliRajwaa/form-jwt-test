@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-const API_BASE_URL = "https://form-jwt-test-ps51.vercel.app/api";
-
 const UserForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,24 +23,30 @@ const UserForm = () => {
             navigate('/');
             return;
           }
-          
-          const response = await axios.get(`${API_BASE_URL}/users/${id}`, {
+          console.log('Mengambil data user dengan ID:', id);
+          const response = await axios.get(`http://localhost:3000/users/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          
+          console.log('Response user:', response.data);
           setFormData({
             username: response.data.username,
             email: response.data.email,
             password: '',
           });
         } catch (err) {
+          console.error('Error saat mengambil user:', err);
           if (err.response) {
+            console.log('Response error dari backend:', err.response.data);
             setError(err.response.data.message || 'Gagal mengambil data user');
             if (err.response.status === 401 || err.response.status === 403) {
               navigate('/');
             }
+          } else if (err.request) {
+            console.log('Tidak ada response dari backend:', err.request);
+            setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
           } else {
-            setError('Tidak dapat terhubung ke server');
+            console.log('Error lainnya:', err.message);
+            setError('Terjadi kesalahan: ' + err.message);
           }
         }
       };
@@ -63,32 +67,45 @@ const UserForm = () => {
         navigate('/');
         return;
       }
-
       if (id) {
+        console.log('Mengupdate user dengan ID:', id, formData);
         await axios.put(
-          `${API_BASE_URL}/users/${id}`,
+          `http://localhost:3000/users/${id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log('User berhasil diupdate');
       } else {
-        await axios.post(
-          `${API_BASE_URL}/users`,
+        console.log('Menambah user baru:', formData);
+        const response = await axios.post(
+          'http://localhost:3000/users',
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log('Response tambah user:', response.data);
       }
       navigate('/users');
     } catch (err) {
+      console.error('Error saat submit form:', err);
       if (err.response) {
+        console.log('Response error dari backend:', err.response.data);
         setError(err.response.data.message || 'Gagal menyimpan data');
+        if (err.response.status === 401 || err.response.status === 403) {
+          navigate('/');
+        }
+      } else if (err.request) {
+        console.log('Tidak ada response dari backend:', err.request);
+        setError('Tidak dapat terhubung ke server. Pastikan backend berjalan.');
       } else {
-        setError('Tidak dapat terhubung ke server');
+        console.log('Error lainnya:', err.message);
+        setError('Terjadi kesalahan: ' + err.message);
       }
     }
   };
 
   return (
     <div className="relative flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
+      {/* Background Glow */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-96 h-96 bg-pink-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
       </div>
@@ -107,7 +124,6 @@ const UserForm = () => {
         >
           {id ? 'Edit Pengguna' : 'Tambah Pengguna'}
         </motion.h2>
-
         {error && (
           <motion.p
             initial={{ opacity: 0 }}
