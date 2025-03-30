@@ -38,7 +38,8 @@ app.use(cors({
     'http://localhost:5173' // Untuk development lokal
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Tambahkan ini
 }));
 
 // Schema dan Model untuk User
@@ -96,6 +97,11 @@ app.post('/login', async (req, res) => {
     console.error('Error login:', err);
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// Tambahkan health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
 });
 
 // Endpoint GET /users

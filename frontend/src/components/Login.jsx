@@ -19,27 +19,26 @@ const Login = () => {
     setError("");
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/login`, // Diubah
+        `${import.meta.env.VITE_API_BASE_URL}/login`,
+        { username, password },
         {
-          username,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
+          timeout: 10000 // Tambahkan timeout
         }
       );
-      localStorage.setItem("token", response.data.token);
-      navigate("/users");
-    } catch (err) {
-      if (err.response) {
-        setError(err.response.data.message || "Login gagal");
-      } else if (err.request) {
-        setError("Tidak dapat terhubung ke server. Pastikan backend berjalan.");
-      } else {
-        setError("Terjadi kesalahan: " + err.message);
+      
+      if(response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        navigate("/users");
       }
+    } catch (err) {
+      let errorMessage = "Terjadi kesalahan";
+      if(err.code === "ECONNABORTED") {
+        errorMessage = "Timeout: Server tidak merespon";
+      } else if(err.response) {
+        errorMessage = err.response.data.message || "Login gagal";
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
