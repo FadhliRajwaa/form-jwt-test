@@ -27,10 +27,26 @@ mongoose.connect(process.env.MONGO_URI, {
   });
 
 app.use(bodyParser.json());
+
+// Daftar origin yang diizinkan
+const allowedOrigins = [
+  'https://form-jwt-test-ps51.vercel.app', // Origin production
+  'http://localhost:5173' // Origin development
+];
+
+// Konfigurasi CORS untuk mengizinkan beberapa origin
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://form-jwt-test-ps51.vercel.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: (origin, callback) => {
+    console.log('Origin yang diterima:', origin); // Tambahkan log untuk debugging
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200 // Pastikan preflight request (OPTIONS) berhasil
 }));
 
 const userSchema = new mongoose.Schema({
