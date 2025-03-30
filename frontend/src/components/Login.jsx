@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 
+const API_BASE_URL = "https://form-jwt-test-ps51.vercel.app/api";
+
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +18,7 @@ const Login = () => {
     setError("");
     try {
       const response = await axios.post(
-        "https://form-jwt-test-ps51.vercel.app/api/login",
+        `${API_BASE_URL}/login`,
         {
           username,
           password,

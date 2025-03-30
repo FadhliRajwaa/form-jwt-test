@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
+const API_BASE_URL = "https://form-jwt-test-ps51.vercel.app/api";
+
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
@@ -17,7 +19,7 @@ const UserList = () => {
           return;
         }
 
-        const response = await axios.get("https://form-jwt-test-ps51.vercel.app/api/users", {
+        const response = await axios.get(`${API_BASE_URL}/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(response.data);
@@ -37,7 +39,7 @@ const UserList = () => {
     if (window.confirm('Apakah Anda yakin ingin menghapus user ini?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`https://form-jwt-test-ps51.vercel.app/api/users/${id}`, {
+        await axios.delete(`${API_BASE_URL}/users/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(users.filter((user) => user._id !== id));

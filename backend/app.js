@@ -8,7 +8,7 @@ const cors = require('cors');
 
 const app = express();
 
-// Ambil SECRET_KEY dari environment variables (diatur di Vercel)
+// Ambil SECRET_KEY dari environment variables
 const SECRET_KEY = process.env.SECRET_KEY;
 
 // Validasi SECRET_KEY
@@ -32,8 +32,8 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use(bodyParser.json());
 app.use(cors({
   origin: [
-    'https://form-jwt-test-ps51.vercel.app', // Domain frontend
-    'http://localhost:5173' // Untuk development lokal
+    'https://form-jwt-test-ps51.vercel.app',
+    'http://localhost:5173'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -70,6 +70,12 @@ const verifyToken = (req, res, next) => {
 
 // API Router
 const apiRouter = express.Router();
+
+// Tambahkan logging untuk semua rute API
+apiRouter.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Endpoint POST /api/login
 apiRouter.post('/login', async (req, res) => {
@@ -228,6 +234,11 @@ apiRouter.delete('/users/:id', verifyToken, async (req, res) => {
 
 // Pasang rute API di bawah /api
 app.use('/api', apiRouter);
+
+// Tambahkan rute dasar untuk debugging
+app.get('/', (req, res) => {
+  res.send('Backend is running');
+});
 
 // Eksport aplikasi untuk Vercel
 module.exports = app;
