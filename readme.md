@@ -2,7 +2,7 @@
 
 🚀 **Live Demo**: [https://form-jwt-test-ps51.vercel.app/](https://form-jwt-test-ps51.vercel.app/)
 
-![Desktop Preview](/frontend/public/desktop.jpg)
+![Desktop Preview](/frontend/public/dekstop.jpg)
 ![Mobile Preview](/frontend/public/mobile.jpg)
 
 ## Fitur Utama
